@@ -11,10 +11,16 @@ $query = "SELECT foto FROM galeri WHERE id = $id";
 $result = mysqli_query($conn, $query);
 
 if ($result && mysqli_num_rows($result) > 0) {
-    $foto = mysqli_fetch_assoc($result)['foto'];
+    $row = mysqli_fetch_assoc($result);
+    $foto = $row['foto'];
+    $thumbnail = $row['thumbnail'];
     // Hapus file foto jika ada
     if (file_exists($foto)) {
         unlink($foto);
+    }
+    // Hapus file thumbnail jika ada dan berbeda dari foto
+    if (!empty($thumbnail) && $thumbnail !== $foto && file_exists($thumbnail)) {
+        unlink($thumbnail);
     }
 
     // Hapus data dari database

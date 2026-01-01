@@ -1,6 +1,5 @@
-# TODO: Implement Persistent Login (Remember Me)
+# TODO: Buat fitur lebih dinamis
 
-- [x] Create user_tokens table in database
-- [x] Modify login.php to add "Ingat Saya" checkbox and handle token generation
-- [x] Add check_remember_login function in includes/koneksidb.php
-- [x] Update pages to call the check function
+- [x] Tambahkan JavaScript untuk memuat kelas secara dinamis saat unit dipilih di presensi_santri.php
+- [x] Tambahkan JavaScript untuk memuat kelas secara dinamis saat unit dipilih di tampilkan_presensi.php
+- [ ] Uji fungsionalitas AJAX

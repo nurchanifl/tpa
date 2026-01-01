@@ -75,7 +75,33 @@ if (isset($_SESSION['success_message'])): ?>
             </div>
         </div>
     </main>
-    
+
+        <!-- Gallery Section -->
+        <section class="gallery-section py-5">
+            <div class="container">
+                <h2 class="text-center mb-4">Galeri Kegiatan</h2>
+                <div class="row">
+                    <?php
+                    // Ambil 3 foto galeri terbaru
+                    $sql_galeri = "SELECT thumbnail, judul FROM galeri ORDER BY tanggal_upload DESC LIMIT 3";
+                    $result_galeri = mysqli_query($conn, $sql_galeri);
+                    if ($result_galeri && mysqli_num_rows($result_galeri) > 0) {
+                        while ($row = mysqli_fetch_assoc($result_galeri)) {
+                            echo '<div class="col-md-4 mb-4">';
+                            echo '<img src="' . htmlspecialchars($row['thumbnail']) . '" alt="' . htmlspecialchars($row['judul']) . '" class="img-fluid rounded shadow gallery-img" style="object-fit: cover; height: 200px;">';
+                            echo '</div>';
+                        }
+                    } else {
+                        echo '<div class="col-12"><p class="text-center">Belum ada foto galeri.</p></div>';
+                    }
+                    ?>
+                </div>
+                <div class="text-center">
+                    <a href="page/galeri.php" class="btn btn-secondary">Lihat Lebih Banyak</a>
+                </div>
+            </div>
+        </section>
+
     <a href="page/testimoni.php" class="sticky-testimoni">
         <i class="fas fa-comment-dots"></i> Lihat Testimoni
     </a>

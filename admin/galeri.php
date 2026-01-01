@@ -51,6 +51,31 @@ $total_pages = ceil($total / $limit);
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .card-img-top {
+            max-width: 100%;
+            max-height: 150px;
+            width: auto;
+            height: auto;
+        }
+        .card {
+            overflow: hidden;
+        }
+        .card-img-top {
+            width: 100%;
+            max-height: 150px;
+            object-fit: cover;
+        }
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: auto;
+        }
+        .btn-container {
+            margin-top: auto;
+        }
+    </style>
 </head>
 <body>
     <header class="bg-primary text-white py-3">
@@ -59,12 +84,6 @@ $total_pages = ceil($total / $limit);
         </div>
     </header>
     <main class="container py-5">
-        <!-- Tombol Tambah Foto (hanya untuk admin) -->
-        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-            <div class="mb-4 text-end">
-                <a href="tambah_foto_galeri.php" class="btn btn-success">Tambah Foto</a>
-            </div>
-        <?php endif; ?>
 
         <!-- Filter Form -->
         <form method="GET">
@@ -79,31 +98,28 @@ $total_pages = ceil($total / $limit);
         </form>
         
         <!-- Gallery Grid -->
-        <div class="row">
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-6">
             <?php
             if (mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
-                    echo '<div class="col-md-4 mb-4">';
+                    echo '<div class="col-md-4 mb-2">';
                     echo '<div class="card">';
-                    echo '<a href="' . htmlspecialchars($row['foto']) . '" data-lightbox="galeri" data-title="' . htmlspecialchars($row['judul']) . '">';
-                    echo '<img src="' . htmlspecialchars($row['foto']) . '" class="card-img-top" alt="' . htmlspecialchars($row['judul']) . '">';
+                    $img_src = !empty($row['thumbnail']) ? '../' . $row['thumbnail'] : '../' . $row['foto'];
+                    echo '<a href="../' . htmlspecialchars($row['foto']) . '" data-lightbox="galeri" data-title="' . htmlspecialchars($row['judul']) . '">';
+                    echo '<img src="' . htmlspecialchars($img_src) . '" class="card-img-top" alt="' . htmlspecialchars($row['judul']) . '">';
                     echo '</a>';
-                    echo '<div class="card-body">';
-                    echo '<h5 class="card-title">' . htmlspecialchars($row['judul']) . '</h5>';
-                    echo '<p class="card-text">' . htmlspecialchars($row['deskripsi']) . '</p>';
-                    
-                    // Tombol Unduh untuk semua pengguna
-                    echo '<div class="text-center mt-3">';
+                    echo '<div class="card-body p-2">';
+                    echo '<h6 class="card-title">' . htmlspecialchars($row['judul']) . '</h6>';
+                    echo '<small class="card-text">' . htmlspecialchars($row['deskripsi']) . '</small>';
+
+                    // Tombol
+                    echo '<div class="btn-container d-flex justify-content-center gap-1 mt-auto">';
                     echo '<a href="unduh_foto_galeri.php?file=' . urlencode($row['foto']) . '" class="btn btn-primary btn-sm">Unduh</a>';
-                    echo '</div>';
-                    
-                    // Tombol Edit dan Hapus hanya untuk admin
                     if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
-                        echo '<div class="d-flex justify-content-between mt-3">';
-                        echo '<a href="edit_foto_galeri.php?id=' . $row['id'] . '" class="btn btn-warning btn-sm">Edit</a>';
-                        echo '<a href="hapus_foto_galeri.php?id=' . $row['id'] . '" class="btn btn-danger btn-sm" onclick="return confirm(\'Yakin ingin menghapus foto ini?\')">Hapus</a>';
-                        echo '</div>';
+                        echo '<a href="edit_galeri.php?id=' . $row['id'] . '" class="btn btn-warning btn-sm">Edit</a>';
+                        echo '<a href="hapus_galeri.php?id=' . $row['id'] . '" class="btn btn-danger btn-sm" onclick="return confirm(\'Yakin ingin menghapus foto ini?\')">Hapus</a>';
                     }
+                    echo '</div>';
 
                     echo '</div>';
                     echo '</div>';

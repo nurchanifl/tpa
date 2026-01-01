@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 12 Des 2024 pada 17.40
+-- Waktu pembuatan: 08 Okt 2025 pada 13.59
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -33,15 +33,36 @@ CREATE TABLE `galeri` (
   `foto` varchar(255) NOT NULL,
   `deskripsi` text DEFAULT NULL,
   `tanggal_upload` timestamp NOT NULL DEFAULT current_timestamp(),
-  `kategori` varchar(100) NOT NULL
+  `kategori` varchar(100) NOT NULL,
+  `thumbnail` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data untuk tabel `galeri`
 --
 
-INSERT INTO `galeri` (`id`, `judul`, `foto`, `deskripsi`, `tanggal_upload`, `kategori`) VALUES
-(3, 'foto bersama', 'uploads/1733693793_DSC09220.JPG', 'bagus', '2024-12-08 21:36:33', 'Kegiatan');
+INSERT INTO `galeri` (`id`, `judul`, `foto`, `deskripsi`, `tanggal_upload`, `kategori`, `thumbnail`) VALUES
+(3, 'foto bersama', 'uploads/1733693793_DSC09220.JPG', 'bagus', '2024-12-08 21:36:33', 'Kegiatan', NULL),
+(4, 'foto bersama', '../uploads/1759840758_DSC09152.JPG', 'rewrew', '2025-10-07 12:39:20', 'Lomba Unit 2024', '../thumbnails/1759840758_DSC09152.JPG');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `galeri_kategori`
+--
+
+CREATE TABLE `galeri_kategori` (
+  `id` int(11) NOT NULL,
+  `nama` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `galeri_kategori`
+--
+
+INSERT INTO `galeri_kategori` (`id`, `nama`) VALUES
+(1, 'Rihlah 2025'),
+(2, 'Lomba Unit 2024');
 
 -- --------------------------------------------------------
 
@@ -248,7 +269,25 @@ INSERT INTO `presensi` (`id`, `id_santri`, `tanggal`, `status`, `keterangan`) VA
 (338, 13, '2024-12-13', 'Hadir', ''),
 (339, 14, '2024-12-13', 'Hadir', ''),
 (340, 15, '2024-12-13', 'Hadir', ''),
-(341, 16, '2024-12-13', 'Sakit', '');
+(341, 16, '2024-12-13', 'Sakit', ''),
+(342, 6, '2025-10-06', 'Izin', ''),
+(343, 12, '2025-10-06', 'Hadir', ''),
+(344, 13, '2025-10-06', 'Hadir', ''),
+(345, 14, '2025-10-06', 'Sakit', ''),
+(346, 15, '2025-10-06', 'Hadir', ''),
+(347, 16, '2025-10-06', 'Hadir', ''),
+(354, 6, '2025-10-07', 'Hadir', ''),
+(355, 12, '2025-10-07', 'Hadir', ''),
+(356, 13, '2025-10-07', 'Hadir', ''),
+(357, 14, '2025-10-07', 'Hadir', ''),
+(358, 15, '2025-10-07', 'Hadir', ''),
+(359, 16, '2025-10-07', 'Hadir', ''),
+(360, 6, '2025-10-08', 'Hadir', ''),
+(361, 12, '2025-10-08', 'Hadir', ''),
+(362, 13, '2025-10-08', 'Izin', ''),
+(363, 14, '2025-10-08', 'Hadir', ''),
+(364, 15, '2025-10-08', 'Sakit', ''),
+(365, 16, '2025-10-08', 'Hadir', '');
 
 -- --------------------------------------------------------
 
@@ -337,6 +376,27 @@ INSERT INTO `santri` (`id`, `nama_santri`, `id_kelas`, `id_unit`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Struktur dari tabel `statistik`
+--
+
+CREATE TABLE `statistik` (
+  `id` int(11) NOT NULL,
+  `nama_statistik` varchar(50) NOT NULL,
+  `nilai` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `statistik`
+--
+
+INSERT INTO `statistik` (`id`, `nama_statistik`, `nilai`) VALUES
+(1, 'guru_total', '12'),
+(2, 'tahun_berdiri', '5'),
+(3, 'santri_aktif', '150');
+
+-- --------------------------------------------------------
+
+--
 -- Struktur dari tabel `unit`
 --
 
@@ -376,6 +436,19 @@ INSERT INTO `users` (`id`, `username`, `password`, `role`, `tanggal_dibuat`) VAL
 (1, 'admin', '$2y$10$unzzf9SEN5OfB9UyOVPDG.Tll3Yd7Ut1MOiFRgwGiLF/390P4NrW.', 'admin', '2024-12-08 16:41:35'),
 (2, 'user', '$2y$10$ZofXlK/905AOxhoVQLP9Qe4CbuOGxf9hikimIx2APY/J.7WtQCxT.', 'user', '2024-12-08 16:45:08');
 
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `user_tokens`
+--
+
+CREATE TABLE `user_tokens` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `expires_at` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 --
 -- Indexes for dumped tables
 --
@@ -384,6 +457,12 @@ INSERT INTO `users` (`id`, `username`, `password`, `role`, `tanggal_dibuat`) VAL
 -- Indeks untuk tabel `galeri`
 --
 ALTER TABLE `galeri`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indeks untuk tabel `galeri_kategori`
+--
+ALTER TABLE `galeri_kategori`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -452,6 +531,12 @@ ALTER TABLE `santri`
   ADD KEY `fk_unit` (`id_unit`);
 
 --
+-- Indeks untuk tabel `statistik`
+--
+ALTER TABLE `statistik`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indeks untuk tabel `unit`
 --
 ALTER TABLE `unit`
@@ -465,6 +550,13 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `username` (`username`);
 
 --
+-- Indeks untuk tabel `user_tokens`
+--
+ALTER TABLE `user_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
 -- AUTO_INCREMENT untuk tabel yang dibuang
 --
 
@@ -472,7 +564,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT untuk tabel `galeri`
 --
 ALTER TABLE `galeri`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT untuk tabel `galeri_kategori`
+--
+ALTER TABLE `galeri_kategori`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT untuk tabel `hari_libur`
@@ -520,7 +618,7 @@ ALTER TABLE `pengumuman`
 -- AUTO_INCREMENT untuk tabel `presensi`
 --
 ALTER TABLE `presensi`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=342;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=366;
 
 --
 -- AUTO_INCREMENT untuk tabel `rating_testimoni`
@@ -535,6 +633,12 @@ ALTER TABLE `santri`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
+-- AUTO_INCREMENT untuk tabel `statistik`
+--
+ALTER TABLE `statistik`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT untuk tabel `unit`
 --
 ALTER TABLE `unit`
@@ -545,6 +649,12 @@ ALTER TABLE `unit`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT untuk tabel `user_tokens`
+--
+ALTER TABLE `user_tokens`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
@@ -574,6 +684,12 @@ ALTER TABLE `rating_testimoni`
 ALTER TABLE `santri`
   ADD CONSTRAINT `fk_unit` FOREIGN KEY (`id_unit`) REFERENCES `unit` (`id`),
   ADD CONSTRAINT `santri_ibfk_1` FOREIGN KEY (`id_kelas`) REFERENCES `kelas` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `user_tokens`
+--
+ALTER TABLE `user_tokens`
+  ADD CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

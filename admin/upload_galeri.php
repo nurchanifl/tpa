@@ -10,17 +10,24 @@ while ($row = mysqli_fetch_assoc($kategori_result)) {
 }
 
 // Fungsi membuat thumbnail
-function buatThumbnail($src, $dest, $max_size = 200) {
+function buatThumbnail($src, $dest, $size = 400) {
     list($width, $height) = getimagesize($src);
-    $ratio = min($max_size / $width, $max_size / $height);
-    $new_width = $width * $ratio;
-    $new_height = $height * $ratio;
-
-    $thumb = imagecreatetruecolor($new_width, $new_height);
     $image = imagecreatefromstring(file_get_contents($src));
-    imagecopyresampled($thumb, $image, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
+
+    // Hitung crop untuk square
+    $min_side = min($width, $height);
+    $crop_x = ($width - $min_side) / 2;
+    $crop_y = ($height - $min_side) / 2;
+
+    // Crop image ke square
+    $cropped = imagecrop($image, ['x' => $crop_x, 'y' => $crop_y, 'width' => $min_side, 'height' => $min_side]);
+
+    // Resize ke size yang diinginkan
+    $thumb = imagecreatetruecolor($size, $size);
+    imagecopyresampled($thumb, $cropped, 0, 0, 0, 0, $size, $size, $min_side, $min_side);
     imagejpeg($thumb, $dest, 90); // Simpan thumbnail dengan kualitas 90%
     imagedestroy($thumb);
+    imagedestroy($cropped);
     imagedestroy($image);
 }
 
@@ -30,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
     $kategori = mysqli_real_escape_string($conn, $_POST['kategori']);
 
-    if (!in_array($kategori, $kategori_list)) {
+    if (!empty($kategori_list) && !in_array($kategori, $kategori_list)) {
         die('<div class="alert alert-danger" role="alert">Kategori tidak valid!</div>');
     }
 
@@ -43,24 +50,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $success_count = 0;
     $foto_files = is_array($_FILES['foto']['name']) ? $_FILES['foto']['name'] : [$_FILES['foto']['name']];
     $tmp_names = is_array($_FILES['foto']['tmp_name']) ? $_FILES['foto']['tmp_name'] : [$_FILES['foto']['tmp_name']];
+    $upload_errors = is_array($_FILES['foto']['error']) ? $_FILES['foto']['error'] : [$_FILES['foto']['error']];
 
     foreach ($foto_files as $key => $filename) {
         $foto = basename($filename);
         $tmp_name = $tmp_names[$key];
-        $target_file = $target_dir . time() . '_' . $foto;
-        $thumbnail_file = $thumbnail_dir . time() . '_' . $foto;
-        $allowed_ext = ['jpg', 'jpeg', 'png', 'gif'];
-        $file_ext = strtolower(pathinfo($foto, PATHINFO_EXTENSION));
+        $unique_id = time() . '_' . mt_rand(1000, 9999);
+        $target_file = $target_dir . $unique_id . '_' . $foto;
+        $thumbnail_file = $thumbnail_dir . $unique_id . '_' . $foto;
 
-        if (!in_array($file_ext, $allowed_ext)) {
-            $errors[] = "File $foto tidak valid.";
+        if (empty($foto)) {
+            continue;
+        }
+
+        if ($upload_errors[$key] !== UPLOAD_ERR_OK) {
+            switch ($upload_errors[$key]) {
+                case UPLOAD_ERR_INI_SIZE:
+                    $errors[] = "File $foto terlalu besar (melebihi upload_max_filesize).";
+                    break;
+                case UPLOAD_ERR_FORM_SIZE:
+                    $errors[] = "File $foto terlalu besar (melebihi MAX_FILE_SIZE).";
+                    break;
+                case UPLOAD_ERR_PARTIAL:
+                    $errors[] = "File $foto hanya terunggah sebagian.";
+                    break;
+                case UPLOAD_ERR_NO_FILE:
+                    $errors[] = "Tidak ada file yang dipilih untuk $foto.";
+                    break;
+                case UPLOAD_ERR_NO_TMP_DIR:
+                    $errors[] = "Folder temporary tidak ditemukan.";
+                    break;
+                case UPLOAD_ERR_CANT_WRITE:
+                    $errors[] = "Gagal menulis file $foto ke disk.";
+                    break;
+                case UPLOAD_ERR_EXTENSION:
+                    $errors[] = "Upload file $foto dihentikan oleh ekstensi.";
+                    break;
+                default:
+                    $errors[] = "Error tidak diketahui untuk $foto.";
+                    break;
+            }
+            continue;
+        }
+
+        if (empty($tmp_name)) {
+            $errors[] = "File $foto gagal diunggah.";
+            continue;
+        }
+
+        if (getimagesize($tmp_name) === false) {
+            $errors[] = "File $foto bukan gambar valid.";
             continue;
         }
 
         if (move_uploaded_file($tmp_name, $target_file)) {
-            buatThumbnail($target_file, $thumbnail_file); // Buat thumbnail
+            if (function_exists('imagecreatetruecolor')) {
+                buatThumbnail($target_file, $thumbnail_file); // Buat thumbnail
+            } else {
+                $thumbnail_file = $target_file; // Jika GD tidak tersedia, gunakan file asli
+            }
 
-            $sql = "INSERT INTO galeri (judul, deskripsi, kategori, foto, thumbnail, tanggal_upload) 
+            $sql = "INSERT INTO galeri (judul, deskripsi, kategori, foto, thumbnail, tanggal_upload)
                     VALUES (?, ?, ?, ?, ?, NOW())";
             $stmt = mysqli_prepare($conn, $sql);
             mysqli_stmt_bind_param($stmt, 'sssss', $judul, $deskripsi, $kategori, $target_file, $thumbnail_file);
@@ -119,11 +169,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </select>
             </div>
             <div class="mb-3">
-                <label for="foto" class="form-label">Pilih Folder</label>
-                <input type="file" class="form-control" id="foto" name="foto[]" accept="image/*" webkitdirectory multiple required>
+                <label class="form-label">Pilih Tipe Upload</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="upload_type" id="single" value="single" checked>
+                    <label class="form-check-label" for="single">
+                        Upload File Tunggal
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="upload_type" id="multiple" value="multiple">
+                    <label class="form-check-label" for="multiple">
+                        Upload Beberapa File
+                    </label>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Unggah</button>
+            <div class="mb-3" id="single-file-div">
+                <label for="foto_single" class="form-label">Pilih File Foto</label>
+                <input type="file" class="form-control" id="foto_single" name="foto" accept="image/*" required>
+            </div>
+            <div class="mb-3" id="multiple-div" style="display: none;">
+                <label for="foto_multiple" class="form-label">Pilih Beberapa File Foto</label>
+                <input type="file" class="form-control" id="foto_multiple" name="foto[]" accept="image/*" multiple required>
+            </div>
+            <button type="submit" class="btn btn-primary" id="upload-btn">Unggah</button>
+            <div id="loading" style="display: none;" class="mt-3">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <span>Mengunggah file, harap tunggu...</span>
+            </div>
         </form>
+        <script>
+            document.querySelectorAll('input[name="upload_type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'single') {
+                        document.getElementById('single-file-div').style.display = 'block';
+                        document.getElementById('multiple-div').style.display = 'none';
+                        document.getElementById('foto_single').required = true;
+                        document.getElementById('foto_multiple').required = false;
+                    } else {
+                        document.getElementById('single-file-div').style.display = 'none';
+                        document.getElementById('multiple-div').style.display = 'block';
+                        document.getElementById('foto_single').required = false;
+                        document.getElementById('foto_multiple').required = true;
+                    }
+                });
+            });
+
+            document.getElementById('upload-btn').addEventListener('click', function() {
+                document.getElementById('loading').style.display = 'block';
+                this.disabled = true;
+            });
+        </script>
     </div>
 </body>
 </html>
